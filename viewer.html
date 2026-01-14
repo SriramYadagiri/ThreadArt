@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Thread Art Viewer</title>
+  <style>
+    body{margin:0;font-family:system-ui;background:#0b0f17;color:#e8eefc}
+    .wrap{max-width:1100px;margin:0 auto;padding:12px;display:grid;gap:14px}
+    .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .top-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+    .top-controls button{background:rgba(12,18,32,.7);border:1px solid rgba(255,255,255,.2);box-shadow:0 8px 18px rgba(0,0,0,.25)}
+    .control-pill{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:rgba(12,18,32,.5);border:1px solid rgba(255,255,255,.16)}
+    .control-label{font-size:12px;letter-spacing:.02em;opacity:.85}
+    .size-input{width:50px;padding:8px 10px;border-radius:999px;background:rgba(12,18,32,.65);border:1px solid rgba(255,255,255,.18)}
+    .toggle{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:rgba(12,18,32,.45);border:1px solid rgba(255,255,255,.14)}
+    .toggle input[type="checkbox"]{appearance:none;width:34px;height:18px;border-radius:999px;position:relative;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25);transition:background .2s ease,border-color .2s ease}
+    .toggle input[type="checkbox"]::after{content:"";position:absolute;top:3px;left:1px;width:14px;height:14px;border-radius:50%;background:#e8eefc;transition:transform .2s ease,background .2s ease}
+    .toggle input[type="checkbox"]:checked{background:rgba(99,102,241,.7);border-color:rgba(99,102,241,.9)}
+    .toggle input[type="checkbox"]:checked::after{transform:translateX(16px);background:#fff}
+    canvas{height:auto;background:#fff;border-radius:14px;margin:auto;border:1px solid rgba(255,255,255,.12)}
+    .map-viewport{width:600px;height:600px;margin:auto;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .map-viewport.pan-enabled{display:block}
+    .map-viewport canvas{max-width:none}
+    .map-viewport.pan-enabled canvas{position:absolute;left:0;top:0;cursor:grab}
+    .map-viewport canvas{border-radius:14px}
+    input,button{border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:inherit;padding:10px 12px;font:inherit}
+    button{cursor:pointer}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .muted{opacity:.75;font-size:12px}
+    
+    input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 45%;
+        margin: 0;
+    }
+
+    /* Track */
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 6px;
+        background: rgba(195, 195, 195, 0.95);
+        border-radius: 999px;
+    }
+    input[type="range"]::-moz-range-track {
+        height: 6px;
+        background: rgba(195, 195, 195,0.95);
+        border-radius: 999px;
+    }
+
+    /* Thumb */
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #6366f1;
+        margin-top: -4px; /* centers thumb vertically */
+    }
+    input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #6366f1;
+        border: none;
+    }
+
+.overlayControls{
+  position:absolute;
+  top:80%;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:12px;
+  border-radius:14px;
+  max-width: min(92%, 900px);
+  color: #35373a;
+}
+
+.overlayControls { background: transparent; border: none; backdrop-filter: none; }
+
+.overlayTop{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.overlayBottom{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.overlayBottom input[type="range"]{
+  width: min(520px, 70vw);
+}
+
+.overlayControls button{
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(195, 195, 195, 0.98);
+  background: rgba(195, 195, 195, 0.90);
+  color: #35373a;
+}
+
+.overlayText{ font-weight: 600; margin-left: 6px; }
+.overlayPill{
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(99,102,241,.75);
+  border: 1px solid rgba(99,102,241,.95);
+}
+
+.overlayControls { pointer-events: none; }
+.overlayControls button,
+.overlayControls input { pointer-events: auto; }
+
+
+    .big{font-size:16px;font-weight:600}
+    .pill{padding:6px 10px;border-radius:999px;background:rgba(99,102,241,.25);border:1px solid rgba(99,102,241,.55)}
+    .dropdown-card{padding:0;max-height:0;opacity:0;transform:translateY(-6px);overflow:hidden;transition:max-height .22s ease,opacity .18s ease,transform .22s ease}
+    .dropdown-card.is-open{max-height:420px;opacity:1;transform:translateY(0)}
+    .dropdown-content{padding:14px}
+
+    .overlayControls { pointer-events: none; }
+.overlayControls button,
+.overlayControls input { pointer-events: auto; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" style="padding:2px;">
+    <div class="top-controls">
+      <div class="row">
+        <button id="backBtn">Back to Generator</button>
+        <button id="toggleUploadBtn" class="pill">Upload JSON ▾</button>
+      </div>
+      <div class="control-pill">
+        <span class="control-label">Canvas Size</span>
+        <input id="size" class="size-input" type="number" min="200" max="2000" step="50" value="600"/>
+      </div>
+      <label class="toggle">
+        <span class="control-label">Pins</span>
+        <input id="showPins" type="checkbox" checked />
+      </label>
+      <label class="toggle">
+        <span class="control-label">History</span>
+        <input id="showHistory" type="checkbox" checked />
+      </label>
+    </div>
+    <div id="manualUploadCard" class="card dropdown-card">
+      <div class="dropdown-content">
+        <div class="muted">Load a build guide JSON (file) or paste JSON below:</div>
+
+        <div class="row" style="margin-top:10px">
+            <input id="jsonFile" type="file" accept="application/json"/>
+            <button id="loadDemo" class="pill">Load from textarea</button>
+        </div>
+
+        <textarea id="jsonText" style="width:95%;min-height:160px;border-radius:12px;margin-top:10px;background:rgba(255,255,255,.06);color:inherit;border:1px solid rgba(255,255,255,.14);padding:12px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;" placeholder="Paste JSON here..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card map-card" style="margin: auto">
+    <div id="mapViewport" class="map-viewport">
+      <canvas id="c"></canvas>
+
+      <div class="overlayControls" id="overlayControls">
+        <div class="overlayTop">
+            <button id="prevBtn">◀</button>
+            <button id="playBtn">Play</button>
+            <button id="nextBtn">▶</button>
+            <span class="overlayText" id="stepText">Step: 0</span>
+            <span class="overlayPill" id="moveText">Pin ? → ?</span>
+        </div>
+
+        <div class="overlayBottom">
+          <input id="stepSlider" type="range" min="0" max="0" value="0" disabled />
+          <span class="muted">Tip: Pins are numbered starting from 0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="viewer.js"></script>
+</body>
+</html>
