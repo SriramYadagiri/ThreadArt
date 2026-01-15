@@ -293,7 +293,6 @@ function finishGeneration() {
   copyBtn.disabled = false;
   downloadBtn.disabled = false;
 
-  openViewerBtn.disabled = false;
 }
 
 function generateThreadArt() {
@@ -471,5 +470,13 @@ generateBtn.disabled = true;
 stopBtn.disabled = true;
 copyBtn.disabled = true;
 downloadBtn.disabled = true;
-openViewerBtn.disabled = true;
-openViewerBtn.onclick = () => window.open("viewer.html", "_blank");
+openViewerBtn.onclick = () => {
+  if (running) {
+    let userConfirmed = confirm("Are you sure you want to go to the viewer? The string art generation isn't finished, so it won't transfer over.");
+    if (userConfirmed) {
+      window.open("viewer.html", "_blank");
+    }
+  } else {
+    window.open("viewer.html", "_blank");
+  }
+}
